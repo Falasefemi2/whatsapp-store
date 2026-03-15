@@ -7,13 +7,17 @@ import dashboard from "./routes/dashboard-route"
 
 const app = new OpenAPIHono()
 
-// routes
+app.openAPIRegistry.registerComponent("securitySchemes", "cookieAuth", {
+    type: "apiKey",
+    in: "cookie",
+    name: "token"
+})
+
 app.route("/auth", auth)
 app.route("/vendors", vendor)
 app.route("/products", product)
 app.route("/dashboard", dashboard)
 
-// OpenAPI JSON doc at /doc
 app.doc("/doc", {
     openapi: "3.0.0",
     info: {
@@ -24,7 +28,6 @@ app.doc("/doc", {
     servers: [{ url: "http://localhost:3000" }]
 })
 
-// Scalar UI at /scalar
 app.get("/scalar", Scalar({ url: "/doc", theme: "purple" }))
 
 export default app

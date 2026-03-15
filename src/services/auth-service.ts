@@ -10,7 +10,7 @@ interface RegisterPayload {
     password: string;
     storeName: string;
     phone: string;
-    slug: string;
+    // slug: string;
 }
 
 const generateSlug = (storeName: string) => {

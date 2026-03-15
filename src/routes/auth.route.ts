@@ -1,8 +1,9 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi"
 import { setCookie } from "hono/cookie"
 import { loginVendor, registerVendor } from "../services/auth-service"
+import type { AppContext } from "../lib/types"
 
-const auth = new OpenAPIHono()
+const auth = new OpenAPIHono<AppContext>()
 
 // REGISTER
 auth.openapi(
@@ -31,9 +32,15 @@ auth.openapi(
                 description: "Registration successful",
                 content: {
                     "application/json": {
-                        schema: z.object({
-                            message: z.string()
-                        })
+                        schema: z.object({ message: z.string() })
+                    }
+                }
+            },
+            400: {
+                description: "Email already in use",
+                content: {
+                    "application/json": {
+                        schema: z.object({ message: z.string() })
                     }
                 }
             },
@@ -41,9 +48,7 @@ auth.openapi(
                 description: "Registration failed",
                 content: {
                     "application/json": {
-                        schema: z.object({
-                            message: z.string()
-                        })
+                        schema: z.object({ message: z.string() })
                     }
                 }
             }
@@ -51,7 +56,7 @@ auth.openapi(
     }),
     async (c) => {
         try {
-            const body = await c.req.json()
+            const body = c.req.valid("json")
             await registerVendor(body)
             return c.json({ message: "Registration successful, check your email for approval" }, 201)
         } catch (error: any) {
@@ -100,9 +105,7 @@ auth.openapi(
                 description: "Invalid credentials",
                 content: {
                     "application/json": {
-                        schema: z.object({
-                            message: z.string()
-                        })
+                        schema: z.object({ message: z.string() })
                     }
                 }
             }
@@ -110,7 +113,7 @@ auth.openapi(
     }),
     async (c) => {
         try {
-            const { email, password } = await c.req.json()
+            const { email, password } = c.req.valid("json")
             const { token, user } = await loginVendor(email, password)
             setCookie(c, "token", token, {
                 httpOnly: true,
@@ -118,7 +121,7 @@ auth.openapi(
                 sameSite: "Lax",
                 maxAge: 60 * 60 * 24 * 7
             })
-            return c.json({ message: "Login successful", user })
+            return c.json({ message: "Login successful", user }, 200)
         } catch (error: any) {
             return c.json({ message: error.message || "Login failed" }, 401)
         }
