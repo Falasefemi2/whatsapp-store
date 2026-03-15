@@ -2,6 +2,7 @@ import { Hono } from "hono"
 import { approveVendor, getAllVendors, getApprovedVendors, getPendingVendors, getVendorBySlug } from "../services/auth-service"
 import { authMiddleware } from "../middleware/auth"
 import { adminMiddleware } from "../middleware/admin"
+import { recordVisit } from "../services/dashboard-service"
 
 const vendor = new Hono()
 
@@ -10,10 +11,14 @@ vendor.get("/stores/:slug", async (c) => {
     try {
         const slug = c.req.param("slug")
         const store = await getVendorBySlug(slug)
+
+        // record visit after fetching store
+        const ip = c.req.header("x-forwarded-for") ?? "unknown"
+        await recordVisit(store.id, ip)
+
         return c.json(store)
     } catch (error: any) {
-        console.error("Error fetching vendor by slug:", error)
-        return c.json({ message: error.message || "Failed to fetch vendor" }, 500)
+        return c.json({ message: error.message }, 404)
     }
 })
 

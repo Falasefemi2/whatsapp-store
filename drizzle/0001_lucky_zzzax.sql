@@ -1,0 +1,1 @@
+ALTER TABLE "store_visits" ADD COLUMN "ip" varchar(45) DEFAULT 'unknown' NOT NULL;

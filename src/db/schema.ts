@@ -61,6 +61,7 @@ export const storeVisits = pgTable("store_visits", {
     vendorId: uuid("vendor_id")
         .notNull()
         .references(() => vendors.id, { onDelete: "cascade" }),
+    ip: varchar("ip", { length: 45 }).notNull().default("unknown"),
     visitedAt: timestamp("visited_at").defaultNow().notNull(),
 })
 
