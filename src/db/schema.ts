@@ -90,3 +90,10 @@ export const productsRelations = relations(products, ({ one, many }) => ({
 
     images: many(productImages)
 }))
+
+export const productImagesRelations = relations(productImages, ({ one }) => ({
+    product: one(products, {
+        fields: [productImages.productId],
+        references: [products.id],
+    })
+}))
