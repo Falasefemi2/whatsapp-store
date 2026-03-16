@@ -4,8 +4,16 @@ import vendor from "./routes/vendor.route"
 import auth from "./routes/auth.route"
 import product from "./routes/product.route"
 import dashboard from "./routes/dashboard-route"
+import { cors } from 'hono/cors'
 
 const app = new OpenAPIHono()
+
+app.use('*', cors({
+    origin: 'http://localhost:5173',
+    allowHeaders: ['Content-Type', 'Authorization'],
+    allowMethods: ['POST', 'GET', 'OPTIONS', 'PUT', 'DELETE', 'PATCH'],
+    credentials: true,
+}))
 
 app.openAPIRegistry.registerComponent("securitySchemes", "cookieAuth", {
     type: "apiKey",

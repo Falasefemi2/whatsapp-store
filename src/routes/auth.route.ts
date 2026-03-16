@@ -1,7 +1,8 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi"
-import { setCookie } from "hono/cookie"
-import { loginVendor, registerVendor } from "../services/auth-service"
+import { getCookie, setCookie } from "hono/cookie"
+import { getCurrentUser, loginVendor, registerVendor } from "../services/auth-service"
 import type { AppContext } from "../lib/types"
+import { verify } from "hono/jwt"
 
 const auth = new OpenAPIHono<AppContext>()
 
@@ -124,6 +125,53 @@ auth.openapi(
             return c.json({ message: "Login successful", user }, 200)
         } catch (error: any) {
             return c.json({ message: error.message || "Login failed" }, 401)
+        }
+    }
+)
+
+auth.openapi(
+    createRoute({
+        method: "get",
+        path: "/me",
+        tags: ["Auth"],
+        summary: "Get current logged in user",
+        responses: {
+            200: {
+                description: "Current user",
+                content: {
+                    "application/json": {
+                        schema: z.object({
+                            user: z.object({
+                                id: z.string(),
+                                name: z.string(),
+                                email: z.string(),
+                                role: z.string()
+                            })
+                        })
+                    }
+                }
+            },
+            401: {
+                description: "Unauthorized",
+                content: {
+                    "application/json": {
+                        schema: z.object({ message: z.string() })
+                    }
+                }
+            }
+        }
+    }),
+    async (c) => {
+        try {
+            const token = getCookie(c, "token")
+            if (!token) return c.json({ message: "Unauthorized" }, 401)
+
+            const payload = await verify(token, Bun.env.JWT_SECRET!, "HS256")
+            const user = await getCurrentUser(payload.userId as string)
+
+            return c.json({ user }, 200)
+        } catch {
+            return c.json({ message: "Unauthorized" }, 401)
         }
     }
 )

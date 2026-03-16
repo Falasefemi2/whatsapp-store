@@ -80,6 +80,14 @@ export const loginVendor = async (email: string, password: string) => {
     return { token, user }
 }
 
+export const getCurrentUser = async (userId: string) => {
+    const user = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+        with: { vendor: true }
+    })
+    if (!user) throw new Error("User not found")
+    return user
+}
 
 export const getAllVendors = async () => {
     return await db.query.vendors.findMany({
